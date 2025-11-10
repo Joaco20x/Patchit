@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reporte de Imperfecciones</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #333;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      flex: 1;
+      display: flex;
+    }
+    #map {
+      flex: 2;
+      height: 100%;
+    }
+    #formulario {
+      flex: 1;
+      padding: 1rem;
+      background: #f4f4f4;
+      border-left: 2px solid #ccc;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, textarea, button {
+      width: 100%;
+      margin-top: 5px;
+      padding: 8px;
+    }
+    button {
+      background: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    button:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mapa de Imperfecciones - Temuco</h1>
+    <p>Haz clic en el mapa para seleccionar la ubicación del problema</p>
+  </header>
+  <main>
+    <!-- Mapa -->
+    <div id="map"></div>
+
+    <!-- Formulario -->
+    <div id="formulario">
+      <h2>Reportar imperfección</h2>
+      <form id="reporteForm">
+        <label for="descripcion">Descripción:</label>
+        <textarea id="descripcion" required></textarea>
+        
+        <label for="foto">Foto (opcional):</label>
+        <input type="file" id="foto" accept="image/*">
+        
+        <label for="lat">Latitud:</label>
+        <input type="text" id="lat" readonly>
+        
+        <label for="lng">Longitud:</label>
+        <input type="text" id="lng" readonly>
+        
+        <button type="submit">Agregar al mapa</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    // Definir límites de Temuco (aproximados)
+    const temucoLimites = [
+      [-38.78, -72.65],  // Suroeste
+      [-38.70, -72.55]   // Noreste
+    ];
+
+    // Inicializar mapa en Temuco con límites
+    var map = L.map('map', {
+      center: [-38.7397, -72.5984],
+      zoom: 13,
+      minZoom: 12,
+      maxZoom: 18,
+      maxBounds: temucoLimites,
+      maxBoundsViscosity: 1.0
+    });
+
+    // Cargar mapa base
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marcadorTemp = null;
+
+    // Seleccionar punto en el mapa
+    map.on('click', function(e) {
+      const { lat, lng } = e.latlng;
+      
+      // Verificar que el clic esté dentro de los límites de Temuco
+      if (lat < temucoLimites[0][0] || lat > temucoLimites[1][0] ||
+          lng < temucoLimites[0][1] || lng > temucoLimites[1][1]) {
+        alert("Por favor, selecciona una ubicación dentro de Temuco");
+        return;
+      }
+      
+      document.getElementById('lat').value = lat.toFixed(6);
+      document.getElementById('lng').value = lng.toFixed(6);
+
+      // Si ya hay un marcador temporal, eliminarlo
+      if (marcadorTemp) {
+        map.removeLayer(marcadorTemp);
+      }
+      // Crear marcador temporal
+      marcadorTemp = L.marker([lat, lng]).addTo(map)
+        .bindPopup("Ubicación seleccionada").openPopup();
+    });
+
+    // Manejar envío del formulario
+    document.getElementById('reporteForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const descripcion = document.getElementById('descripcion').value;
+      const lat = parseFloat(document.getElementById('lat').value);
+      const lng = parseFloat(document.getElementById('lng').value);
+      const fotoInput = document.getElementById('foto');
+
+      if (!lat || !lng) {
+        alert("Selecciona una ubicación en el mapa");
+        return;
+      }
+
+      // Procesar la foto si existe
+      if (fotoInput.files && fotoInput.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+          const imagenUrl = event.target.result;
+          
+          // Agregar marcador con foto
+          const popupContent = `
+            <div style="max-width: 200px;">
+              <b>Reporte:</b><br>
+              ${descripcion}<br>
+              <img src="${imagenUrl}" style="width: 100%; margin-top: 10px; border-radius: 5px;">
+            </div>
+          `;
+          
+          L.marker([lat, lng]).addTo(map)
+            .bindPopup(popupContent, { maxWidth: 250 });
+        };
+        
+        reader.readAsDataURL(fotoInput.files[0]);
+      } else {
+        // Agregar marcador sin foto
+        L.marker([lat, lng]).addTo(map)
+          .bindPopup(`<b>Reporte:</b><br>${descripcion}`);
+      }
+
+      // Limpiar formulario
+      this.reset();
+      document.getElementById('lat').value = "";
+      document.getElementById('lng').value = "";
+
+      if (marcadorTemp) {
+        map.removeLayer(marcadorTemp);
+        marcadorTemp = null;
+      }
+    });
+  </script>
+</body>
+</html>

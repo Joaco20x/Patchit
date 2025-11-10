@@ -1,0 +1,29 @@
+from django.db import models
+from usuarios.models import Usuario
+class Bache(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    titulo = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True)
+    foto = models.ImageField(upload_to='baches/')
+    latitud = models.FloatField()
+    longitud = models.FloatField()
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    aprobado_por_municipalidad = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.titulo
+
+class Comentario(models.Model):
+    bache = models.ForeignKey(Bache, on_delete=models.CASCADE, related_name='comentarios')
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    texto = models.TextField()
+    calificacion = models.IntegerField(default=3)  # 1 a 5
+    peligro = models.IntegerField(default=3)       # 1 a 5
+    activo = models.BooleanField(default=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Comentario de {self.usuario.username} sobre {self.bache.titulo}'
+# Create your models here.
+
+# Create your models here.

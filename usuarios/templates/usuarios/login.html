@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/estilo_login.css' %}">
+    <title>Document</title>
+</head>
+<body>
+    <!-- Header -->
+    <div class="arriba">
+        <h1>Inicio sesion</h1>
+    </div>
+
+    <!-- Opciones -->
+    <form method="POST" action="">
+        <div class="datos">
+                <div class="Ingreso_datos">
+                        <p>Gmail</p>
+                    <input type="text" id="correo" required>
+                        <p>Contraseña</p>
+                    <input type="password" id="contraseña" required>
+                </div>
+            <div class="card">
+
+                <input type="submit" value="Iniciar sesion" id="ingreso">
+                <img src="{% static 'img/usuario.png' %}" height="150" width="150" alt="Usuario">
+            </div>
+        </div>
+    </form>
+
+    <!-- Footer -->
+    <footer>
+        &copy; 2025 Proyecto Baches en Temuco - Todos los derechos reservados
+    </footer>
+</body>
+</html>

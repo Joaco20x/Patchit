@@ -1,0 +1,34 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baches en Temuco</title>
+    <link rel="stylesheet" href="{% static 'css/style_menu.css' %}">
+</head>
+<body>
+    <!-- Header -->
+    <div class="arriba">
+        <h1>Baches en Temuco</h1>
+    </div>
+
+    <!-- Opciones -->
+    <div class="opciones">
+        <div class="card">
+            <p>Mapa</p>
+            <img src="{% static 'img/mapa_icono.png' %}" height="150" width="150" alt="Mapa">
+        </div>
+
+        <div class="card">
+            <p>Iniciar Sesión</p>
+            <img src="{% static 'img/usuario.png' %}" height="150" width="150" alt="Usuario">
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        &copy; 2025 Proyecto Baches en Temuco - Todos los derechos reservados
+    </footer>
+</body>
+</html>
