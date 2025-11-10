@@ -4,4 +4,4 @@ from .models import Bache
 class BacheForm(forms.ModelForm):
     class Meta:
         model = Bache
-        fields = ['descripcion', 'foto', 'latitud', 'longitud', 'peligro', 'existe']
+        fields = ['descripcion', 'foto', 'latitud', 'longitud']
