@@ -1,0 +1,32 @@
+<h1>Editar Reporte de Bache</h1>
+
+<p>Estás editando el bache: <strong>"{{ bache.descripcion }}"</strong></p>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}  <div>
+        <label for="descripcion">Nueva Descripción:</label>
+        <textarea id="descripcion" name="descripcion" rows="4" style="width: 100%;">{{ bache.descripcion }}</textarea>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="foto">Cambiar Foto (opcional):</label>
+        <p>Foto actual:</p>
+        {% if bache.foto %}
+            <img src="{{ bache.foto.url }}" alt="Foto del bache" width="200">
+        {% else %}
+            <p>No hay foto.</p>
+        {% endif %}
+        <br>
+        <input type="file" id="foto" name="foto" accept="image/*">
+    </div>
+
+    <br>
+    
+    <button type="submit" style="background-color: green; color: white;">
+      Guardar Cambios
+    </button>
+    
+    <a href="{% url 'mapa_baches' %}">Cancelar y volver al mapa</a>
+</form>

@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import Bache  
 
-# Register your models here.
+# dice al admin que muestre el modelo Bache
+admin.site.register(Bache)

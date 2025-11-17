@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
+
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -61,24 +62,25 @@
     <p>Haz clic en el mapa para seleccionar la ubicación del problema</p>
   </header>
   <main>
-    <!-- Mapa -->
     <div id="map"></div>
 
-    <!-- Formulario -->
     <div id="formulario">
       <h2>Reportar imperfección</h2>
-      <form id="reporteForm">
+
+      <form id="reporteForm" action="{% url 'reportar_bache' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
         <label for="descripcion">Descripción:</label>
-        <textarea id="descripcion" required></textarea>
+        <textarea id="descripcion" name="descripcion" required></textarea>
         
         <label for="foto">Foto (opcional):</label>
-        <input type="file" id="foto" accept="image/*">
+        <input type="file" id="foto" name="foto" accept="image/*">
         
         <label for="lat">Latitud:</label>
-        <input type="text" id="lat" readonly>
+        <input type="text" id="lat" name="lat" readonly>
         
         <label for="lng">Longitud:</label>
-        <input type="text" id="lng" readonly>
+        <input type="text" id="lng" name="lng" readonly>
         
         <button type="submit">Agregar al mapa</button>
       </form>
@@ -86,13 +88,12 @@
   </main>
 
   <script>
-    // Definir límites de Temuco (aproximados)
+    // Inicialización del mapa
     const temucoLimites = [
-      [-38.78, -72.65],  // Suroeste
-      [-38.70, -72.55]   // Noreste
+      [-38.78, -72.65], 
+      [-38.70, -72.55]
     ];
 
-    // Inicializar mapa en Temuco con límites
     var map = L.map('map', {
       center: [-38.7397, -72.5984],
       zoom: 13,
@@ -102,18 +103,56 @@
       maxBoundsViscosity: 1.0
     });
 
-    // Cargar mapa base
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
+    
+    {% for bache in baches %}
+      {% if bache.latitud and bache.longitud %}
+        
+        {% comment %} 
+          ¡EL PLAN "SLEDGEHAMMER"!
+          1. Obtenemos la latitud como un TEXTO (ej: "-38,73")
+        {% endcomment %}
+        var lat_str = "{{ bache.latitud }}"; 
+        var lng_str = "{{ bache.longitud }}";
+        
+        {% comment %} 
+          2. Reemplazamos la COMA por un PUNTO usando JavaScript
+        {% endcomment %}
+        var lat_num = parseFloat(lat_str.replace(",", "."));
+        var lng_num = parseFloat(lng_str.replace(",", "."));
+        
+        {% comment %} 
+          3. Creamos el marcador con los números correctos (con punto)
+        {% endcomment %}
+        L.marker([lat_num, lng_num]).addTo(map)
+          .bindPopup(`
+            <div style="max-width: 200px;">
+              <b>Reporte:</b><br>
+              {{ bache.descripcion|escapejs }}
+              
+              {% if bache.foto %}
+                <img src="{{ bache.foto.url }}" style="width: 100%; margin-top: 10px; border-radius: 5px;">
+              {% endif %}
+              
+              <hr style="margin-top: 10px; margin-bottom: 5px;">
+              <a href="{% url 'editar_bache' bache.id %}" style="color: blue;">Editar</a> | 
+              <a href="{% url 'eliminar_bache' bache.id %}" style="color: red;">Eliminar</a>
+            </div>
+          `, { maxWidth: 250 });
+          
+      {% endif %}
+    {% endfor %}
+    
+
+
     let marcadorTemp = null;
 
-    // Seleccionar punto en el mapa
     map.on('click', function(e) {
       const { lat, lng } = e.latlng;
       
-      // Verificar que el clic esté dentro de los límites de Temuco
       if (lat < temucoLimites[0][0] || lat > temucoLimites[1][0] ||
           lng < temucoLimites[0][1] || lng > temucoLimites[1][1]) {
         alert("Por favor, selecciona una ubicación dentro de Temuco");
@@ -123,66 +162,13 @@
       document.getElementById('lat').value = lat.toFixed(6);
       document.getElementById('lng').value = lng.toFixed(6);
 
-      // Si ya hay un marcador temporal, eliminarlo
       if (marcadorTemp) {
         map.removeLayer(marcadorTemp);
       }
-      // Crear marcador temporal
       marcadorTemp = L.marker([lat, lng]).addTo(map)
         .bindPopup("Ubicación seleccionada").openPopup();
     });
 
-    // Manejar envío del formulario
-    document.getElementById('reporteForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const descripcion = document.getElementById('descripcion').value;
-      const lat = parseFloat(document.getElementById('lat').value);
-      const lng = parseFloat(document.getElementById('lng').value);
-      const fotoInput = document.getElementById('foto');
-
-      if (!lat || !lng) {
-        alert("Selecciona una ubicación en el mapa");
-        return;
-      }
-
-      // Procesar la foto si existe
-      if (fotoInput.files && fotoInput.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(event) {
-          const imagenUrl = event.target.result;
-          
-          // Agregar marcador con foto
-          const popupContent = `
-            <div style="max-width: 200px;">
-              <b>Reporte:</b><br>
-              ${descripcion}<br>
-              <img src="${imagenUrl}" style="width: 100%; margin-top: 10px; border-radius: 5px;">
-            </div>
-          `;
-          
-          L.marker([lat, lng]).addTo(map)
-            .bindPopup(popupContent, { maxWidth: 250 });
-        };
-        
-        reader.readAsDataURL(fotoInput.files[0]);
-      } else {
-        // Agregar marcador sin foto
-        L.marker([lat, lng]).addTo(map)
-          .bindPopup(`<b>Reporte:</b><br>${descripcion}`);
-      }
-
-      // Limpiar formulario
-      this.reset();
-      document.getElementById('lat').value = "";
-      document.getElementById('lng').value = "";
-
-      if (marcadorTemp) {
-        map.removeLayer(marcadorTemp);
-        marcadorTemp = null;
-      }
-    });
   </script>
 </body>
 </html>

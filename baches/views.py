@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required  
 from django.contrib import messages
 from .models import Bache
 from .forms import BacheForm
@@ -8,6 +8,7 @@ def inicio(request):
 
     return render(request, "baches/menu.html")
 
+@login_required  # Requiere que el usuario inicie sesión para ver el mapa
 def mapa_baches(request):
     baches = Bache.objects.all()
     context = {
@@ -15,6 +16,8 @@ def mapa_baches(request):
     }
     return render(request, "baches/mapa.html", context)
 
+
+@login_required  #requiere que el usuario inicie sesión para reportar
 def formulario_reporte(request):
 
     if request.method == 'POST':
@@ -25,9 +28,13 @@ def formulario_reporte(request):
         
         if not descripcion or not latitud or not longitud:
             messages.error(request, "Todos los campos son obligatorios excepto la foto")
-            return render(request, "baches/mapa.html")
+            # mejor recargar la página con el contexto
+            baches = Bache.objects.all()
+            context = {'baches': baches}
+            return render(request, "baches/mapa.html", context)
         
         bache = Bache.objects.create(
+            usuario=request.user, #Asigna el usuario logueado al bache
             descripcion=descripcion,
             latitud=float(latitud),
             longitud=float(longitud),
@@ -37,7 +44,10 @@ def formulario_reporte(request):
         messages.success(request, "Bache reportado exitosamente")
         return redirect('mapa_baches')
     
+
     return render(request, "baches/mapa.html")
+
+
 
 def detalle_bache(request, id):
 
@@ -47,6 +57,8 @@ def detalle_bache(request, id):
     }
     return render(request, "baches/detalle.html", context)
 
+
+@login_required 
 def actualizar_bache(request, id):
     bache = get_object_or_404(Bache, id=id)
     
@@ -57,7 +69,9 @@ def actualizar_bache(request, id):
         
         bache.save()
         messages.success(request, "Bache actualizado exitosamente")
-        return redirect('detalle_bache', id=id)
+        
+
+        return redirect('mapa_baches')
     
     context = {
         'bache': bache
@@ -65,12 +79,15 @@ def actualizar_bache(request, id):
     return render(request, "baches/editar.html", context)
 
 
+@login_required 
 def eliminar_bache(request, id):
     bache = get_object_or_404(Bache, id=id)
     
+
+    #requiere que el usuario esté logueado
     if bache.usuario != request.user:
         messages.error(request, "No tienes permiso para eliminar este reporte")
-        return redirect('detalle_bache', id=id)
+        return redirect('mapa_baches') 
     
     if request.method == 'POST':
         bache.delete()

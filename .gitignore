@@ -1,0 +1,16 @@
+# Ignorar la base de datos local
+db.sqlite3
+*.sqlite3
+
+# Ignorar los archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Ignorar los archivos de media subidos (los logos)
+# (Si quieres subir una imagen al proyecto, quita esta línea temporalmente)
+*.png
+*.jpg
+*.jpeg
+
+# Ignorar la configuración de VSCode
+.vscode/
