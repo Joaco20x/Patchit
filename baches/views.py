@@ -5,55 +5,69 @@ from .models import Bache
 from .forms import BacheForm
 
 def inicio(request):
-
     return render(request, "baches/menu.html")
 
-@login_required  # Requiere que el usuario inicie sesión para ver el mapa
+@login_required
 def mapa_baches(request):
-    baches = Bache.objects.all()
+    baches = Bache.objects.all().select_related('usuario')
     context = {
         'baches': baches
     }
     return render(request, "baches/mapa.html", context)
 
 
-@login_required  #requiere que el usuario inicie sesión para reportar
+@login_required
 def formulario_reporte(request):
-
     if request.method == 'POST':
-        descripcion = request.POST.get('descripcion')
-        latitud = request.POST.get('lat')
-        longitud = request.POST.get('lng')
-        foto = request.FILES.get('foto')
-        
-        if not descripcion or not latitud or not longitud:
-            messages.error(request, "Todos los campos son obligatorios excepto la foto")
-            # mejor recargar la página con el contexto
+        try:
+            descripcion = request.POST.get('descripcion')
+            latitud = request.POST.get('lat')
+            longitud = request.POST.get('lng')
+            foto = request.FILES.get('foto')
+            titulo = request.POST.get('titulo', 'Bache reportado')
+            
+            # Validaciones
+            if not descripcion or not latitud or not longitud:
+                messages.error(request, "Descripción, latitud y longitud son obligatorios")
+                baches = Bache.objects.all()
+                context = {'baches': baches}
+                return render(request, "baches/mapa.html", context)
+            
+            # Crear el bache
+            bache = Bache.objects.create(
+                usuario=request.user,
+                titulo=titulo,
+                descripcion=descripcion,
+                latitud=float(latitud),
+                longitud=float(longitud),
+                foto=foto if foto else None,
+            )
+            
+            messages.success(request, f"Bache '{bache.titulo}' reportado exitosamente con ID: {bache.id}")
+            return redirect('mapa_baches')
+            
+        except ValueError as e:
+            messages.error(request, "Error en los valores de latitud o longitud")
             baches = Bache.objects.all()
             context = {'baches': baches}
             return render(request, "baches/mapa.html", context)
-        
-        bache = Bache.objects.create(
-            usuario=request.user, #Asigna el usuario logueado al bache
-            descripcion=descripcion,
-            latitud=float(latitud),
-            longitud=float(longitud),
-            foto=foto,
-        )
-        
-        messages.success(request, "Bache reportado exitosamente")
-        return redirect('mapa_baches')
+        except Exception as e:
+            messages.error(request, f"Error al crear el reporte: {str(e)}")
+            baches = Bache.objects.all()
+            context = {'baches': baches}
+            return render(request, "baches/mapa.html", context)
     
-
-    return render(request, "baches/mapa.html")
-
+    baches = Bache.objects.all()
+    context = {'baches': baches}
+    return render(request, "baches/mapa.html", context)
 
 
 def detalle_bache(request, id):
-
     bache = get_object_or_404(Bache, id=id)
+    comentarios = bache.comentarios.filter(activo=True).select_related('usuario')
     context = {
-        'bache': bache
+        'bache': bache,
+        'comentarios': comentarios
     }
     return render(request, "baches/detalle.html", context)
 
@@ -62,16 +76,24 @@ def detalle_bache(request, id):
 def actualizar_bache(request, id):
     bache = get_object_or_404(Bache, id=id)
     
-    if request.method == 'POST':
-        bache.descripcion = request.POST.get('descripcion', bache.descripcion)
-        if 'foto' in request.FILES:
-            bache.foto = request.FILES['foto']
-        
-        bache.save()
-        messages.success(request, "Bache actualizado exitosamente")
-        
-
+    # Verificar que el usuario sea el propietario
+    if bache.usuario != request.user:
+        messages.error(request, "No tienes permiso para editar este reporte")
         return redirect('mapa_baches')
+    
+    if request.method == 'POST':
+        try:
+            bache.titulo = request.POST.get('titulo', bache.titulo)
+            bache.descripcion = request.POST.get('descripcion', bache.descripcion)
+            
+            if 'foto' in request.FILES:
+                bache.foto = request.FILES['foto']
+            
+            bache.save()
+            messages.success(request, "Bache actualizado exitosamente")
+            return redirect('detalle_bache', id=bache.id)
+        except Exception as e:
+            messages.error(request, f"Error al actualizar: {str(e)}")
     
     context = {
         'bache': bache
@@ -83,15 +105,15 @@ def actualizar_bache(request, id):
 def eliminar_bache(request, id):
     bache = get_object_or_404(Bache, id=id)
     
-
-    #requiere que el usuario esté logueado
+    # Verificar que el usuario sea el propietario
     if bache.usuario != request.user:
         messages.error(request, "No tienes permiso para eliminar este reporte")
         return redirect('mapa_baches') 
     
     if request.method == 'POST':
+        titulo = bache.titulo
         bache.delete()
-        messages.success(request, "Bache eliminado exitosamente")
+        messages.success(request, f"Bache '{titulo}' eliminado exitosamente")
         return redirect('mapa_baches')
     
     context = {
