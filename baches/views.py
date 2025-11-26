@@ -103,7 +103,7 @@ def actualizar_bache(request, id):
     context = {
         'bache': bache
     }
-    return render(request, "baches/editar.html", context)
+    return render(request, "baches/editar.html", context)#
 
 
 @login_required 
