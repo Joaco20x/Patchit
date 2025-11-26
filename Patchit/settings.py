@@ -72,7 +72,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'DB_Patchit',
         'USER': 'patchit',
-        'PASSWORD': 'Patchit',
+        'PASSWORD': 'Patchit123',
         'HOST': '127.0.0.1',
         'PORT': '5432',
         'OPTIONS': {

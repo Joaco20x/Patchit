@@ -83,15 +83,20 @@ def actualizar_bache(request, id):
     
     if request.method == 'POST':
         try:
+            # Actualizar campos
             bache.titulo = request.POST.get('titulo', bache.titulo)
             bache.descripcion = request.POST.get('descripcion', bache.descripcion)
             
+            # Foto nueva
             if 'foto' in request.FILES:
                 bache.foto = request.FILES['foto']
             
             bache.save()
             messages.success(request, "Bache actualizado exitosamente")
-            return redirect('detalle_bache', id=bache.id)
+            
+            # Redirigir al mapa para evitar error de detalle.html
+            return redirect('mapa_baches')
+        
         except Exception as e:
             messages.error(request, f"Error al actualizar: {str(e)}")
     

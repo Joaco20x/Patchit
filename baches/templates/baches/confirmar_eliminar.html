@@ -1,15 +1,30 @@
-<h1>Confirmar Eliminación</h1>
+{% load static %}
 
-<p>¿Estás seguro de que quieres eliminar el bache: 
-   <strong>"{{ bache.descripcion }}"</strong>?
-</p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar Eliminación</title>
+    <link rel="stylesheet" href="{% static 'css/estilo_eliminar_bache.css' %}">
+</head>
+<body>
+    <div class="edit-container">
+        <h1>Confirmar Eliminación</h1>
 
-<p>Esta acción no se puede deshacer.</p>
+        <p>¿Estás seguro de que quieres eliminar el bache: 
+           <strong>"{{ bache.descripcion }}"</strong>?
+        </p>
 
-<form method="POST">
-    {% csrf_token %}  <button type="submit" style="background-color: red; color: white;">
-      Sí, eliminar
-    </button>
+        <p>Esta acción no se puede deshacer.</p>
 
-    <a href="{% url 'mapa_baches' %}">Cancelar</a>
-</form>
+        <div class="button-group">
+            <form method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn-cancelar">Sí, eliminar</button>
+            </form>
+
+            <a href="{% url 'mapa_baches' %}" class="btn-guardar">Cancelar</a>
+        </div>
+    </div>
+</body>
+</html>

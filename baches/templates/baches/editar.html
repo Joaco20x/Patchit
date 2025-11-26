@@ -1,32 +1,72 @@
-<h1>Editar Reporte de Bache</h1>
+{% load static %}
 
-<p>Estás editando el bache: <strong>"{{ bache.descripcion }}"</strong></p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Reporte de Bache</title>
+    <link rel="stylesheet" href="{% static 'css/estilo_editar.css' %}">
+</head>
+<body>
 
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}  <div>
-        <label for="descripcion">Nueva Descripción:</label>
-        <textarea id="descripcion" name="descripcion" rows="4" style="width: 100%;">{{ bache.descripcion }}</textarea>
-    </div>
+<div class="edit-container">
+    <h1>Editar Reporte de Bache</h1>
 
-    <br>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
 
-    <div>
-        <label for="foto">Cambiar Foto (opcional):</label>
-        <p>Foto actual:</p>
-        {% if bache.foto %}
-            <img src="{{ bache.foto.url }}" alt="Foto del bache" width="200">
-        {% else %}
-            <p>No hay foto.</p>
-        {% endif %}
-        <br>
-        <input type="file" id="foto" name="foto" accept="image/*">
-    </div>
+        <div class="form-row">
+            <!-- Columna izquierda: descripción y subir foto -->
+            <div class="form-left">
+                <div class="form-group">
+                    <label for="descripcion">Nueva Descripción:</label>
+                    <textarea id="descripcion" name="descripcion" rows="4">{{ bache.descripcion }}</textarea>
+                </div>
 
-    <br>
-    
-    <button type="submit" style="background-color: green; color: white;">
-      Guardar Cambios
-    </button>
-    
-    <a href="{% url 'mapa_baches' %}">Cancelar y volver al mapa</a>
-</form>
+                <div class="form-group">
+                    <label for="foto">Cambiar Foto:</label>
+                    <input type="file" id="foto" name="foto" accept="image/*" onchange="previewFoto(event)">
+                </div>
+            </div>
+
+            <!-- Columna derecha: foto actual y previsualización -->
+            <div class="form-right">
+                <div class="form-group">
+                    <label>Foto Actual:</label>
+                    {% if bache.foto %}
+                        <img id="foto-actual" src="{{ bache.foto.url }}" alt="Foto del bache">
+                    {% else %}
+                        <p>No hay foto.</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>Previsualización Nueva Foto:</label>
+                    <img id="foto-nueva-preview" src="" alt="Previsualización" style="display:none;">
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn-guardar">Guardar Cambios</button>
+            <a href="{% url 'mapa_baches' %}" class="btn-cancelar">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function previewFoto(event) {
+    const preview = document.getElementById('foto-nueva-preview');
+    const file = event.target.files[0];
+    if(file){
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+    } else {
+        preview.src = '';
+        preview.style.display = 'none';
+    }
+}
+</script>
+
+</body>
+</html>
