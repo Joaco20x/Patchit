@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/estilo_register.css' %}">
+    <title>Registro - Patchit</title>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="arriba">
+        <h1>Registro</h1>
+    </div>
+
+    <!-- Mensajes de Django -->
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Contenedor general -->
+    <form method="POST" action="{% url 'registro' %}">
+        {% csrf_token %}
+
+        <div class="datos">
+            
+            <!-- Formulario -->
+            <div class="Ingreso_datos">
+                <p>Nombre de usuario</p>
+                <input type="text" name="username" placeholder="Ingresa tu nombre de usuario" required>
+
+                <p>Correo electrónico</p>
+                <input type="email" name="email" placeholder="Ingresa tu correo" required>
+
+                <p>Teléfono (opcional)</p>
+                <input type="text" name="telefono" placeholder="Ingresa tu teléfono">
+
+                <p>Contraseña</p>
+                <input type="password" name="password1" placeholder="Ingresa tu contraseña (mínimo 8 caracteres)" required>
+
+                <p>Repetir contraseña</p>
+                <input type="password" name="password2" placeholder="Repite tu contraseña" required>
+            </div>
+
+            <!-- Tarjeta lateral -->
+            <div class="card">
+                <input type="submit" value="Crear Cuenta" id="ingreso">
+                <img src="{% static 'img/usuario.png' %}" height="150" width="150" alt="Usuario">
+            </div>
+        </div>
+    </form>
+
+    <!-- Link a login -->
+    <div style="text-align:center; margin-top:20px;">
+        <p>¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión aquí</a></p>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        &copy; 2025 Proyecto Baches en Temuco - Todos los derechos reservados
+    </footer>
+
+    <!-- Estilos para mensajes -->
+    <style>
+        .messages {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 10px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+
+</body>
+</html>

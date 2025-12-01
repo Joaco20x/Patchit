@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,169 +7,343 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
+ 
+    body { font-family: Arial, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { background: #333; color: white; padding: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    header h1 { margin: 0; font-size: 1.2rem; }
+    .btn-header { background: #4a47a3; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 0.9rem; }
+    .btn-danger { background: #dc3545; }
+    
+    main { flex: 1; display: flex; position: relative; }
+    #map { flex: 2; height: 100%; z-index: 1; }
+    
+ 
+    #formulario { flex: 1; padding: 20px; background: #f8f9fa; border-left: 1px solid #ccc; overflow-y: auto; max-width: 400px; }
+    
 
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
+    label { display: block; margin-top: 15px; font-weight: bold; color: #555; }
+    input[type="text"], textarea, input[type="file"] { width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { width: 100%; background: #4a47a3; color: white; border: none; padding: 12px; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+    button:hover { background: #3b3885; }
+    
+   
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
     }
-    header {
-      background: #333;
-      color: white;
-      padding: 1rem;
-      text-align: center;
+    
+    .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 85vh;
+        overflow-y: auto;
+        position: relative;
     }
-    main {
-      flex: 1;
-      display: flex;
+    
+    .close-modal {
+        position: absolute;
+        top: 15px; right: 20px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
     }
-    #map {
-      flex: 2;
-      height: 100%;
+
+   
+    .rating-container {
+        display: flex;
+        gap: 10px;
+        margin: 10px 0;
+        justify-content: center;
     }
-    #formulario {
-      flex: 1;
-      padding: 1rem;
-      background: #f4f4f4;
-      border-left: 2px solid #ccc;
+
+    .rating-option {
+        display: none; 
     }
-    label {
-      display: block;
-      margin-top: 10px;
+
+    .rating-label {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background-color: #ddd; 
+        cursor: pointer;
+        display: inline-block;
+        border: 2px solid #ccc;
+        transition: background-color 0.2s;
     }
-    input, textarea, button {
-      width: 100%;
-      margin-top: 5px;
-      padding: 8px;
+
+  
+    .rating-option:checked + .rating-label {
+        background-color: #dc3545; 
+        border-color: #a71d2a;
     }
-    button {
-      background: #333;
-      color: white;
-      border: none;
-      cursor: pointer;
-      margin-top: 15px;
+    
+    .circle-red {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background-color: #dc3545;
+        border-radius: 50%;
+        margin-right: 2px;
     }
-    button:hover {
-      background: #555;
+    
+    .circle-gray {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background-color: #e9ecef;
+        border-radius: 50%;
+        margin-right: 2px;
+    }
+
+ 
+    .comentario-item {
+        border-bottom: 1px solid #eee;
+        padding: 10px 0;
+    }
+    .comentario-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 5px;
+    }
+    .btn-comentar-popup {
+        display: block;
+        background: #28a745;
+        color: white;
+        text-align: center;
+        padding: 8px;
+        margin-top: 10px;
+        border-radius: 4px;
+        text-decoration: none;
+        cursor: pointer;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Mapa de Imperfecciones - Temuco</h1>
-    <p>Haz clic en el mapa para seleccionar la ubicación del problema</p>
+    <a href="{% url 'menu' %}" class="btn-header">Volver</a>
+    <h1>Mapa de Temuco</h1>
+    {% if user.is_authenticated %}
+      <div>
+          <span style="margin-right: 10px; font-size: 0.9rem;">{{ user.username }}</span>
+          <a href="{% url 'logout' %}" class="btn-header btn-danger">Salir</a>
+      </div>
+    {% endif %}
   </header>
+  
   <main>
     <div id="map"></div>
 
     <div id="formulario">
       <h2>Reportar imperfección</h2>
+      {% if messages %}
+        {% for message in messages %}
+          <div style="padding: 10px; margin-bottom: 10px; border-radius: 4px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
 
-      <form id="reporteForm" action="{% url 'reportar_bache' %}" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        
-        <label for="descripcion">Descripción:</label>
-        <textarea id="descripcion" name="descripcion" required></textarea>
-        
-        <label for="foto">Foto (opcional):</label>
-        <input type="file" id="foto" name="foto" accept="image/*">
-        
-        <label for="lat">Latitud:</label>
-        <input type="text" id="lat" name="lat" readonly>
-        
-        <label for="lng">Longitud:</label>
-        <input type="text" id="lng" name="lng" readonly>
-        
-        <button type="submit">Agregar al mapa</button>
-      </form>
+      {% if user.is_authenticated %}
+        <form action="{% url 'reportar_bache' %}" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <label for="titulo">Título:</label>
+          <input type="text" id="titulo" name="titulo" placeholder="Ej: Bache profundo" required>
+          
+          <label for="descripcion">Descripción:</label>
+          <textarea id="descripcion" name="descripcion" placeholder="Describe el problema..." required></textarea>
+          
+          <label for="foto">Foto (opcional):</label>
+          <input type="file" id="foto" name="foto" accept="image/*">
+          
+          <label>Ubicación (Selecciona en el mapa):</label>
+          <div style="display: flex; gap: 5px;">
+              <input type="text" id="lat" name="lat" readonly placeholder="Latitud">
+              <input type="text" id="lng" name="lng" readonly placeholder="Longitud">
+          </div>
+          
+          <button type="submit">Agregar al mapa</button>
+        </form>
+      {% else %}
+        <div style="background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; text-align: center;">
+          <h3>Inicia sesión para reportar</h3>
+          <a href="{% url 'login' %}?next={{ request.path }}" class="btn-header" style="display:inline-block; margin-top:10px;">Iniciar Sesión</a>
+        </div>
+      {% endif %}
     </div>
   </main>
 
-  <script>
-    // Inicialización del mapa
-    const temucoLimites = [
-      [-38.78, -72.65], 
-      [-38.70, -72.55]
-    ];
+  <div id="modalComentarios" class="modal-overlay">
+      <div class="modal-content">
+          <span class="close-modal" onclick="cerrarModal()">&times;</span>
+          <h2 id="modalTitulo">Comentarios</h2>
+          
+          <div id="listaComentarios" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;">
+              </div>
 
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+          {% if user.is_authenticated %}
+            <h3>Agregar Comentario y Nivel de Peligro</h3>
+            <form id="formComentario" method="POST" action="">
+                {% csrf_token %}
+                <label>Nivel de Peligrosidad (1 a 5):</label>
+                <div class="rating-container">
+                    {% for i in "12345" %}
+                        <input type="radio" name="peligro" value="{{ forloop.counter }}" id="p{{ forloop.counter }}" class="rating-option" required>
+                        <label for="p{{ forloop.counter }}" class="rating-label" title="Nivel {{ forloop.counter }}"></label>
+                    {% endfor %}
+                </div>
+
+                <label>Comentario:</label>
+                <textarea name="texto" rows="3" required placeholder="Describe la peligrosidad..."></textarea>
+                
+                <button type="submit" style="background: #28a745;">Publicar Comentario</button>
+            </form>
+          {% else %}
+            <p style="text-align: center; color: #666;">Debes <a href="{% url 'login' %}">iniciar sesión</a> para comentar.</p>
+          {% endif %}
+      </div>
+  </div>
+
+  <script>
+      var bachesData = {};
+      
+      {% for bache in baches %}
+          bachesData[{{ bache.id }}] = {
+              titulo: "{{ bache.titulo|escapejs }}",
+              urlComentar: "{% url 'guardar_comentario' bache.id %}",
+              comentarios: [
+                  {% for c in bache.comentarios.all %}
+                  {
+                      user: "{{ c.usuario.username|escapejs }}",
+                      fecha: "{{ c.fecha|date:'d/m/Y' }}",
+                      texto: "{{ c.texto|escapejs }}",
+                      peligro: {{ c.peligro }}
+                  },
+                  {% endfor %}
+              ]
+          };
+      {% endfor %}
+  </script>
+
+  <script>
+    // Inicialización del Mapa
+    const temucoLimites = [[-38.78, -72.65], [-38.70, -72.55]];
     var map = L.map('map', {
       center: [-38.7397, -72.5984],
       zoom: 13,
-      minZoom: 12,
-      maxZoom: 18,
-      maxBounds: temucoLimites,
-      maxBoundsViscosity: 1.0
+      minZoom: 12, maxZoom: 18,
+      maxBounds: temucoLimites
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    
+ 
+    function abrirModal(id) {
+        var data = bachesData[id];
+        if (!data) return;
+
+        
+        document.getElementById('modalTitulo').innerText = "Comentarios: " + data.titulo;
+        
+        var form = document.getElementById('formComentario');
+        if(form) form.action = data.urlComentar;
+
+      
+        var lista = document.getElementById('listaComentarios');
+        lista.innerHTML = "";
+        
+        if (data.comentarios.length === 0) {
+            lista.innerHTML = "<p style='color:#999; text-align:center;'>No hay comentarios aún.</p>";
+        } else {
+            data.comentarios.forEach(function(c) {
+                // Generar pelotitas rojas HTML
+                var bolasHTML = "";
+                for(var i=1; i<=5; i++) {
+                    bolasHTML += (i <= c.peligro) ? '<span class="circle-red"></span>' : '<span class="circle-gray"></span>';
+                }
+
+                var item = document.createElement('div');
+                item.className = 'comentario-item';
+                item.innerHTML = `
+                    <div class="comentario-header">
+                        <strong>${c.user}</strong>
+                        <span>${c.fecha}</span>
+                    </div>
+                    <div style="margin-bottom: 5px;">${bolasHTML}</div>
+                    <div>${c.texto}</div>
+                `;
+                lista.appendChild(item);
+            });
+        }
+
+        document.getElementById('modalComentarios').style.display = 'flex';
+    }
+
+    function cerrarModal() {
+        document.getElementById('modalComentarios').style.display = 'none';
+    }
+
+
+    window.onclick = function(event) {
+        var modal = document.getElementById('modalComentarios');
+        if (event.target == modal) {
+            cerrarModal();
+        }
+    }
+
+
     {% for bache in baches %}
       {% if bache.latitud and bache.longitud %}
-        
-        {% comment %} 
-          ¡EL PLAN "SLEDGEHAMMER"!
-          1. Obtenemos la latitud como un TEXTO (ej: "-38,73")
-        {% endcomment %}
-        var lat_str = "{{ bache.latitud }}"; 
-        var lng_str = "{{ bache.longitud }}";
-        
-        {% comment %} 
-          2. Reemplazamos la COMA por un PUNTO usando JavaScript
-        {% endcomment %}
-        var lat_num = parseFloat(lat_str.replace(",", "."));
-        var lng_num = parseFloat(lng_str.replace(",", "."));
-        
-        {% comment %} 
-          3. Creamos el marcador con los números correctos (con punto)
-        {% endcomment %}
-        L.marker([lat_num, lng_num]).addTo(map)
+        L.marker([{{ bache.latitud|stringformat:".6f" }}, {{ bache.longitud|stringformat:".6f" }}]).addTo(map)
           .bindPopup(`
-            <div style="max-width: 200px;">
-              <b>Reporte:</b><br>
-              {{ bache.descripcion|escapejs }}
+            <div style="font-family: Arial, sans-serif;">
+              <h3 style="margin: 0 0 5px 0;">{{ bache.titulo|escapejs }}</h3>
+              <p style="margin: 5px 0;">{{ bache.descripcion|escapejs }}</p>
               
               {% if bache.foto %}
-                <img src="{{ bache.foto.url }}" style="width: 100%; margin-top: 10px; border-radius: 5px;">
+                <img src="{{ bache.foto.url }}" style="width: 100%; margin-top: 5px; border-radius: 4px; max-height: 150px; object-fit: cover;">
               {% endif %}
               
-              <hr style="margin-top: 10px; margin-bottom: 5px;">
-              <a href="{% url 'editar_bache' bache.id %}" style="color: blue;">Editar</a> | 
-              <a href="{% url 'eliminar_bache' bache.id %}" style="color: red;">Eliminar</a>
+              <button onclick="abrirModal({{ bache.id }})" class="btn-comentar-popup">
+                 Ver / Comentar
+              </button>
+
+              {% if user.is_authenticated and user == bache.usuario %}
+                <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 5px;">
+                  <a href="{% url 'editar_bache' bache.id %}" style="color: #4a47a3; margin-right: 10px;">Editar</a>
+                  <a href="{% url 'eliminar_bache' bache.id %}" style="color: #dc3545;">Eliminar</a>
+                </div>
+              {% endif %}
             </div>
-          `, { maxWidth: 250 });
-          
+          `, { maxWidth: 280 });
       {% endif %}
     {% endfor %}
-    
 
 
     let marcadorTemp = null;
-
     map.on('click', function(e) {
       const { lat, lng } = e.latlng;
-      
-      if (lat < temucoLimites[0][0] || lat > temucoLimites[1][0] ||
-          lng < temucoLimites[0][1] || lng > temucoLimites[1][1]) {
-        alert("Por favor, selecciona una ubicación dentro de Temuco");
-        return;
+      if (lat < temucoLimites[0][0] || lat > temucoLimites[1][0] || lng < temucoLimites[0][1] || lng > temucoLimites[1][1]) {
+        alert("Selecciona dentro de Temuco"); return;
       }
-      
       document.getElementById('lat').value = lat.toFixed(6);
       document.getElementById('lng').value = lng.toFixed(6);
-
-      if (marcadorTemp) {
-        map.removeLayer(marcadorTemp);
-      }
-      marcadorTemp = L.marker([lat, lng]).addTo(map)
-        .bindPopup("Ubicación seleccionada").openPopup();
+      if (marcadorTemp) map.removeLayer(marcadorTemp);
+      marcadorTemp = L.marker([lat, lng]).addTo(map).bindPopup("Ubicación seleccionada").openPopup();
     });
-
   </script>
 </body>
 </html>

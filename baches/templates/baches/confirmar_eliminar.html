@@ -1,31 +1,147 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirmar Eliminación</title>
-    <link rel="stylesheet" href="{% static 'css/estilo_eliminar_bache.css' %}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #333;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .info-box p {
+            margin: 0.5rem 0;
+            color: #333;
+        }
+
+        .foto-preview img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            margin-top: 1rem;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="edit-container">
+    <header>
         <h1>Confirmar Eliminación</h1>
+    </header>
 
-        <p>¿Estás seguro de que quieres eliminar el bache: 
-           <strong>"{{ bache.descripcion }}"</strong>?
-        </p>
-
-        <p>Esta acción no se puede deshacer.</p>
-
-        <div class="button-group">
-            <form method="POST">
-                {% csrf_token %}
-                <button type="submit" class="btn-cancelar">Sí, eliminar</button>
-            </form>
-
-            <a href="{% url 'mapa_baches' %}" class="btn-guardar">Cancelar</a>
+    <div class="container">
+        <div class="warning-box">
+            <h2>¿Estás seguro de eliminar este bache?</h2>
+            <p>Esta acción no se puede deshacer.</p>
         </div>
+
+        <div class="info-box">
+            <p><strong>Título:</strong> {{ bache.titulo }}</p>
+            <p><strong>Descripción:</strong> {{ bache.descripcion }}</p>
+            <p><strong>Ubicación:</strong> {{ bache.latitud }}, {{ bache.longitud }}</p>
+            <p><strong>Reportado por:</strong> {{ bache.usuario.username }}</p>
+            <p><strong>Fecha:</strong> {{ bache.fecha_creacion|date:"d/m/Y H:i" }}</p>
+        </div>
+
+        {% if bache.foto %}
+        <div class="foto-preview">
+            <p><strong>Foto asociada:</strong></p>
+            <img src="{{ bache.foto.url }}" alt="Foto del bache">
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="buttons">
+                <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                <a href="{% url 'mapa_baches' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
     </div>
+
+    <footer>
+        &copy; 2025 Proyecto Baches en Temuco
+    </footer>
 </body>
 </html>
-#

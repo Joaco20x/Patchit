@@ -4,31 +4,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baches en Temuco</title>
-    <link rel="stylesheet" href="{% static 'css/style_menu.css' %}">
+    <title>Baches en Temuco - Inicio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: #4a47a3;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 2rem;
+            width: 260px;
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+            transition: background 0.2s;
+        }
+
+        .card:hover {
+            background: #f0f0f5;
+            border-color: #4a47a3;
+        }
+
+        .card p {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #4a47a3;
+        }
+
+        .card img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+        }
+
+        footer {
+            background: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
-    <div class="arriba">
+    <div class="header">
+        {% if user.is_authenticated %}
+            <div class="user-info">
+                 Usuario: {{ user.username }}
+            </div>
+        {% endif %}
+        
         <h1>Baches en Temuco</h1>
+        <p>Sistema de reporte y seguimiento</p>
     </div>
 
-    <!-- Opciones -->
-    <div class="opciones">
-        <div class="card">
+    <div class="container">
+        <a href="{% url 'mapa_baches' %}" class="card">
             <p>Mapa</p>
-            <img src="{% static 'img/mapa_icono.png' %}" height="150" width="150" alt="Mapa">
-        </div>
+            <img src="{% static 'img/mapa_icono.png' %}" alt="Mapa">
+        </a>
 
-        <div class="card">
-            <p>Iniciar Sesión</p>
-            <img src="{% static 'img/usuario.png' %}" height="150" width="150" alt="Usuario">
-        </div>
+        {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="card">
+                <p>Cerrar Sesión</p>
+                <img src="{% static 'img/usuario.png' %}" alt="Salir">
+            </a>
+        {% else %}
+            <a href="{% url 'login' %}" class="card">
+                <p>Iniciar Sesión</p>
+                <img src="{% static 'img/usuario.png' %}" alt="Usuario">
+            </a>
+
+            <a href="{% url 'registro' %}" class="card">
+                <p>Registrarse</p>
+                <img src="{% static 'img/usuario.png' %}" alt="Registro">
+            </a>
+        {% endif %}
     </div>
 
-    <!-- Footer -->
     <footer>
-        &copy; 2025 Proyecto Baches en Temuco - Todos los derechos reservados
+        &copy; 2025 Proyecto Baches en Temuco
     </footer>
 </body>
 </html>

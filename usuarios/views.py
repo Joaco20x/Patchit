@@ -12,24 +12,30 @@ def registro(request):
         password2 = request.POST.get('password2')
         telefono = request.POST.get('telefono', '')
         
+        print(f"DEBUG - Intento de registro: {username}, {email}")  # Para debug
+        
         # Validaciones
         if not username or not email or not password1 or not password2:
             messages.error(request, 'Todos los campos obligatorios deben ser completados')
-            return render(request, 'usuarios/registro.html')
+            return render(request, 'usuarios/register.html')
         
         if password1 != password2:
             messages.error(request, 'Las contraseñas no coinciden')
-            return render(request, 'usuarios/registro.html')
+            return render(request, 'usuarios/register.html')
+        
+        if len(password1) < 8:
+            messages.error(request, 'La contraseña debe tener al menos 8 caracteres')
+            return render(request, 'usuarios/register.html')
         
         if Usuario.objects.filter(username=username).exists():
             messages.error(request, 'El nombre de usuario ya existe')
-            return render(request, 'usuarios/registro.html')
+            return render(request, 'usuarios/register.html')
         
         if Usuario.objects.filter(email=email).exists():
             messages.error(request, 'El email ya está registrado')
-            return render(request, 'usuarios/registro.html')
+            return render(request, 'usuarios/register.html')
         
-        # Crear usuario
+        # Crear usuario en la base de datos PostgreSQL
         try:
             usuario = Usuario.objects.create_user(
                 username=username,
@@ -37,14 +43,18 @@ def registro(request):
                 password=password1,
                 telefono=telefono
             )
-            messages.success(request, 'Usuario registrado exitosamente')
-            login(request, usuario)
+            print(f"DEBUG - Usuario creado exitosamente: {usuario.id}")  # Para debug
+            
+            messages.success(request, f'¡Bienvenido {username}! Tu cuenta ha sido creada exitosamente')
+            login(request, usuario)  # Iniciar sesión automáticamente
             return redirect('mapa_baches')
+            
         except Exception as e:
+            print(f"DEBUG - Error al crear usuario: {str(e)}")  # Para debug
             messages.error(request, f'Error al crear usuario: {str(e)}')
-            return render(request, 'usuarios/registro.html')
+            return render(request, 'usuarios/register.html')
     
-    return render(request, 'usuarios/registro.html')
+    return render(request, 'usuarios/register.html')
 
 
 def login_usuario(request):
@@ -52,8 +62,20 @@ def login_usuario(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         
+        print(f"DEBUG - Intento de login con username: {username}")  # Para debug
+        
         if not username or not password:
             messages.error(request, 'Usuario y contraseña son requeridos')
+            return render(request, 'usuarios/login.html')
+        
+        # Verificar si el usuario existe
+        from usuarios.models import Usuario
+        try:
+            user_exists = Usuario.objects.get(username=username)
+            print(f"DEBUG - Usuario encontrado: {user_exists.username}")
+        except Usuario.DoesNotExist:
+            print(f"DEBUG - Usuario NO existe: {username}")
+            messages.error(request, f'El usuario "{username}" no existe')
             return render(request, 'usuarios/login.html')
         
         user = authenticate(request, username=username, password=password)
@@ -64,7 +86,7 @@ def login_usuario(request):
             next_url = request.GET.get('next', 'mapa_baches')
             return redirect(next_url)
         else:
-            messages.error(request, 'Usuario o contraseña incorrectos')
+            messages.error(request, 'Contraseña incorrecta')
             return render(request, 'usuarios/login.html')
     
     return render(request, 'usuarios/login.html')

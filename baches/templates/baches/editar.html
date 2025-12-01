@@ -1,73 +1,177 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Editar Reporte de Bache</title>
-    <link rel="stylesheet" href="{% static 'css/estilo_editar.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Bache</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #333;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .info-box {
+            background: #e9ecef;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            color: #495057;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        input[type="text"], textarea, input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .foto-actual img {
+            max-width: 200px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #4a47a3;
+        }
+        .btn-primary:hover {
+            background-color: #3b3885;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border: 1px solid transparent;
+        }
+        .alert-success { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <h1>Editar Reporte</h1>
+    </header>
 
-<div class="edit-container">
-    <h1>Editar Reporte de Bache</h1>
+    <div class="container">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
 
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
+        <div class="info-box">
+            <p><strong>Editando:</strong> {{ bache.titulo }}</p>
+            <p><strong>Fecha:</strong> {{ bache.fecha_creacion|date:"d/m/Y H:i" }}</p>
+        </div>
 
-        <div class="form-row">
-            <!-- Columna izquierda: descripción y subir foto -->
-            <div class="form-left">
-                <div class="form-group">
-                    <label for="descripcion">Nueva Descripción:</label>
-                    <textarea id="descripcion" name="descripcion" rows="4">{{ bache.descripcion }}</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="foto">Cambiar Foto:</label>
-                    <input type="file" id="foto" name="foto" accept="image/*" onchange="previewFoto(event)">
-                </div>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="titulo">Título:</label>
+                <input type="text" id="titulo" name="titulo" value="{{ bache.titulo }}">
             </div>
 
-            <!-- Columna derecha: foto actual y previsualización -->
-            <div class="form-right">
-                <div class="form-group">
-                    <label>Foto Actual:</label>
+            <div class="form-group">
+                <label for="descripcion">Descripción:</label>
+                <textarea id="descripcion" name="descripcion" rows="6" required>{{ bache.descripcion }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Foto actual:</label>
+                <div class="foto-actual">
                     {% if bache.foto %}
-                        <img id="foto-actual" src="{{ bache.foto.url }}" alt="Foto del bache">
+                        <img src="{{ bache.foto.url }}" alt="Foto del bache">
                     {% else %}
-                        <p>No hay foto.</p>
+                        <p style="color: #666;">No hay foto disponible</p>
                     {% endif %}
                 </div>
-
-                <div class="form-group">
-                    <label>Previsualización Nueva Foto:</label>
-                    <img id="foto-nueva-preview" src="" alt="Previsualización" style="display:none;">
-                </div>
+                
+                <label for="foto">Cambiar foto (opcional):</label>
+                <input type="file" id="foto" name="foto" accept="image/*">
             </div>
-        </div>
 
-        <div class="button-group">
-            <button type="submit" class="btn-guardar">Guardar Cambios</button>
-            <a href="{% url 'mapa_baches' %}" class="btn-cancelar">Cancelar</a>
-        </div>
-    </form>
-</div>
+            <div class="buttons">
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                <a href="{% url 'mapa_baches' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
 
-<script>
-function previewFoto(event) {
-    const preview = document.getElementById('foto-nueva-preview');
-    const file = event.target.files[0];
-    if(file){
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = 'block';
-    } else {
-        preview.src = '';
-        preview.style.display = 'none';
-    }
-}
-</script>
-
+    <footer>
+        &copy; 2025 Proyecto Baches en Temuco
+    </footer>
 </body>
 </html>
-#
